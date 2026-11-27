@@ -3,21 +3,20 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# 1. Membaca isi file .env agar DATABASE_URL bisa diakses
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip().strip('"').strip("'")
 
-# 2. Membuat mesin penghubung utama ke PostgreSQL (Supabase)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
 engine = create_engine(DATABASE_URL)
 
-# 3. Membuat pabrik sesi (session) untuk transaksi baca/tulis data
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# 4. Cetakan dasar untuk mendefinisikan struktur tabel di Python
 Base = declarative_base()
 
-# 5. Fungsi pembuka dan penutup jalur database otomatis setiap ada request masuk
 def get_db():
     db = SessionLocal()
     try:
